@@ -108,14 +108,23 @@ The UI is designed for **single-window, full-screen usage** on one monitor. QA E
 │ │ ┌─────────────────────────────────────────────────────────────┐ │   │
 │ │ │  📚 Drag KB documents here or click to browse              │ │   │
 │ │ │  (User Guides, Operational Manuals, Process Docs)          │ │   │
+│ │ │                                                             │ │   │
+│ │ │  Category: [CRM ▼] or [+ Create New]   (NEW!)             │ │   │
+│ │ │  Doc Type: [system_guide ▼]                                │ │   │
 │ │ └─────────────────────────────────────────────────────────────┘ │   │
 │ │                                                                 │   │
 │ │ Knowledge Base Documents:                                       │   │
-│ │ • CRM_User_Guide.pdf (19.2 KB) ✓ [system_guide] ✕            │   │
-│ │ • Case_Management_Guide.pdf (2.28 MB) ✓ [process] ✕          │   │
+│ │ ┌─ CRM (2 docs) ────────────────────────────────────────────┐ │   │
+│ │ │ • CRM_User_Guide.pdf (19.2 KB) ✓ [system_guide] ✕         │ │   │
+│ │ │ • CRM_Contact_Mgmt.pdf (1.8 MB) ✓ [process] ✕             │ │   │
+│ │ └─────────────────────────────────────────────────────────────┘ │   │
+│ │ ┌─ Customer Service (1 doc) ────────────────────────────────┐ │   │
+│ │ │ • Case_Management_Guide.pdf (2.28 MB) ✓ [reference] ✕     │ │   │
+│ │ └─────────────────────────────────────────────────────────────┘ │   │
 │ │                                                                 │   │
 │ │ ☑ Use Knowledge Base Context                                  │   │
-│ │ 2 documents loaded (2.3 MB total)                              │   │
+│ │ Filter by category: [All Categories ▼] (NEW!)                 │   │
+│ │ 3 documents loaded across 2 categories (3.9 MB total)          │   │
 │ │                                                                 │   │
 │ │ ℹ️ KB helps agents generate specific field names, menu paths, │   │
 │ │    and business validation rules from system documentation     │   │
@@ -337,14 +346,23 @@ Recent Files (displayed below):
 │       (User Guides, Operational Manuals, Process Docs)        │
 │                    Max 5 MB per document                      │
 │                                                               │
+│     Category: [CRM ▼] or [+ Create New Category]   (NEW!)   │
+│     Doc Type: [system_guide ▼]                               │
+│                                                               │
 └───────────────────────────────────────────────────────────────┘
 
-Knowledge Base Documents (displayed below):
-• CRM_User_Guide.pdf (19.2 KB) ✓ [system_guide] ✕
-• Case_Management_Guide.pdf (2.28 MB) ✓ [process] ✕
+Knowledge Base Documents (displayed below, grouped by category):
+┌─ CRM (2 docs) ────────────────────────────────────────────────┐
+│ • CRM_User_Guide.pdf (19.2 KB) ✓ [system_guide] ✕            │
+│ • CRM_Contact_Mgmt.pdf (1.8 MB) ✓ [process] ✕                │
+└───────────────────────────────────────────────────────────────┘
+┌─ Customer Service (1 doc) ────────────────────────────────────┐
+│ • Case_Management_Guide.pdf (2.28 MB) ✓ [reference] ✕        │
+└───────────────────────────────────────────────────────────────┘
 
 ☑ Use Knowledge Base Context
-2 documents loaded (2.3 MB total)
+Filter by category: [All Categories ▼] (NEW!)
+3 documents loaded across 2 categories (3.9 MB total)
 
 ℹ️ KB helps agents generate specific field names, menu paths,
    and business validation rules from system documentation
@@ -355,10 +373,14 @@ Knowledge Base Documents (displayed below):
 **Behavior**:
 - Different visual style from requirements zone (blue theme)
 - Drag-over highlights with blue border
-- Files appear with document type badge
+- **NEW: Category dropdown populated with existing categories from API**
+- **NEW: "+ Create New Category" shows inline input field for new category name**
+- **NEW: Category is required field (must select or create before upload)**
+- Files appear with document type badge **and grouped by category**
+- **NEW: Category filter dropdown to show/hide specific categories**
 - Checkbox to enable/disable KB context
-- Shows total KB size and document count
-- Info tooltip explaining KB benefits
+- Shows total KB size, document count, **and category count**
+- Info tooltip explaining KB benefits (including category filtering)
 - Link to KB management settings
 - Support up to 100 documents (5MB each)
 - Deduplicate by file hash (shows warning if duplicate)

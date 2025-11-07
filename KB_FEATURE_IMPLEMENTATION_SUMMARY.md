@@ -58,6 +58,7 @@ CREATE TABLE knowledge_base_documents (
     doc_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     doc_name VARCHAR(255) NOT NULL,
     doc_type VARCHAR(50) NOT NULL CHECK (doc_type IN ('system_guide', 'process', 'reference', 'product')),
+    category VARCHAR(100) NOT NULL,  -- NEW: User-defined category (e.g., 'CRM', 'Billing', 'Network')
     doc_description TEXT,
     content TEXT NOT NULL,  -- Full extracted text
     file_size INTEGER NOT NULL,
@@ -66,6 +67,9 @@ CREATE TABLE knowledge_base_documents (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- NEW: Index for fast category filtering
+CREATE INDEX idx_kb_category ON knowledge_base_documents(category);
 ```
 
 #### Updated Tables
@@ -110,6 +114,7 @@ Content-Type: multipart/form-data
 
 file: CRM_User_Guide.pdf
 docType: "system_guide"
+category: "CRM"  -- NEW: User-selected or newly created category
 ```
 
 **Response:**
@@ -130,8 +135,12 @@ docType: "system_guide"
 #### B. KB Management APIs (Week 4: 2-3 hours)
 
 **List KB Documents:** `GET /api/v1/knowledge-base`
-- Filter by docType, isActive
-- Return array of KB documents with metadata
+- Filter by docType, isActive, category (NEW)
+- Return array of KB documents with metadata including category
+
+**Get KB Categories:** `GET /api/v1/knowledge-base/categories` **(NEW)**
+- Return array of unique categories from existing KB documents
+- Used to populate category dropdown
 
 **Delete KB Document:** `DELETE /api/v1/knowledge-base/{docId}`
 - Remove document from database
@@ -140,11 +149,12 @@ docType: "system_guide"
 **Create `KBService` class:**
 ```python
 class KBService:
-    async def upload_document(file: UploadFile, doc_type: str) -> KBDocumentResponse
-    async def list_documents(doc_type: Optional[str], is_active: bool) -> List[KBDocumentResponse]
+    async def upload_document(file: UploadFile, doc_type: str, category: str) -> KBDocumentResponse  # NEW: category param
+    async def list_documents(doc_type: Optional[str], is_active: bool, category: Optional[str]) -> List[KBDocumentResponse]  # NEW: category filter
+    async def get_categories() -> List[str]  # NEW: Get all unique categories
     async def delete_document(doc_id: str) -> bool
     async def get_document_content(doc_id: str) -> str
-    def build_kb_context(kb_doc_ids: List[str], max_length: int) -> str
+    def build_kb_context(kb_doc_ids: List[str], categories: List[str], max_length: int) -> str  # NEW: category filter
 ```
 
 ---
@@ -224,20 +234,81 @@ async def generate_test_cases(
     fileIds: List[str],
     textInput: Optional[str],
     useKnowledgeBase: bool = False,  # NEW
-    kbDocIds: List[str] = []  # NEW
+    kbDocIds: List[str] = [],  # NEW
+    kbCategories: List[str] = []  # NEW: Filter KB by categories
 ):
     # Fetch KB document content if enabled
     kb_context = None
-    if useKnowledgeBase and kbDocIds:
-        kb_context = kb_service.build_kb_context(kbDocIds)
+    if useKnowledgeBase:
+        if kbCategories:
+            # NEW: Filter by categories for relevant KB docs only
+            kb_context = kb_service.build_kb_context_by_category(kbCategories)
+        elif kbDocIds:
+            kb_context = kb_service.build_kb_context(kbDocIds)
     
     # Pass KB context to agents
     test_plan = await planner_agent.plan(
         input_text=combined_input,
-        kb_context=kb_context  # NEW
+        kb_context=kb_context  # NEW: Only relevant category docs
     )
     
     # ... continue generation with KB context
+```
+
+#### D. Category-Based Context Filtering (NEW - Week 6: 1 hour)
+
+**Why Category Filtering Improves Quality:**
+
+1. **Reduces Irrelevant Context**
+   - CRM test cases only get CRM KB docs
+   - Billing test cases only get Billing KB docs
+   - Prevents confusion from unrelated system docs
+
+2. **Stays Within Token Limits**
+   - Instead of 10 KB docs (50,000 chars), use 2-3 relevant docs (15,000 chars)
+   - More room for actual test case generation
+
+3. **Improves Precision**
+   - Agent focuses on relevant procedures
+   - Higher KB compliance score
+   - More accurate field names and menu paths
+
+**Implementation:**
+```python
+class KBContextBuilder:
+    async def build_kb_context_by_category(
+        self, 
+        categories: List[str], 
+        max_length: int = 5000
+    ) -> str:
+        """
+        Fetch only KB documents matching specified categories
+        Example: categories=['CRM', 'Customer Service']
+        """
+        # Query: SELECT * FROM kb_documents WHERE category IN (categories)
+        kb_docs = await self.fetch_by_categories(categories)
+        
+        if not kb_docs:
+            return None
+            
+        combined_text = self._concatenate_documents(kb_docs)
+        truncated_text = self._truncate_to_limit(combined_text, max_length)
+        return self._format_for_prompt(truncated_text)
+```
+
+**Smart Category Detection (Optional Enhancement):**
+```python
+# Auto-detect relevant categories from requirements text
+def detect_relevant_categories(requirements_text: str, all_categories: List[str]) -> List[str]:
+    """
+    Example: If requirements mention "CRM", "subscription", "offer"
+    Return: ['CRM', 'Billing']
+    """
+    detected = []
+    for category in all_categories:
+        if category.lower() in requirements_text.lower():
+            detected.append(category)
+    return detected or ['General']  # Fallback to 'General' category
 ```
 
 ---
@@ -249,7 +320,8 @@ async def generate_test_cases(
 ```typescript
 // components/KBUploadZone.tsx
 interface KBUploadZoneProps {
-  onUpload: (file: File, type: string) => Promise<void>
+  onUpload: (file: File, type: string, category: string) => Promise<void>  // NEW: category param
+  categories: string[]  // NEW: Existing categories for dropdown
   isLoading: boolean
   error?: string
 }
@@ -258,6 +330,7 @@ Features:
 - Drag-and-drop for PDF/text files
 - Blue theme (differentiate from requirements zone)
 - File type validation (max 5MB)
+- **NEW: Category selection (dropdown or create new)**
 - Visual feedback
 - Duplicate detection (show hash warning)
 ```
@@ -269,14 +342,24 @@ Features:
 │      Drag KB documents here or click to browse       │
 │    (User Guides, Operational Manuals, Process Docs)  │
 │                 Max 5 MB per document                 │
+│                                                       │
+│  Category: [CRM ▼]  or  [+ Create New Category]     │  ← NEW!
+│  Doc Type: [system_guide ▼]                          │
+│                                                       │
 └───────────────────────────────────────────────────────┘
 
 Knowledge Base Documents:
-• CRM_User_Guide.pdf (19.2 KB) ✓ [system_guide] ✕
-• Case_Management_Guide.pdf (2.28 MB) ✓ [process] ✕
+┌─ CRM (2 docs) ──────────────────────────────────────┐  ← NEW: Grouped by category
+│ • CRM_User_Guide.pdf (19.2 KB) ✓ [system_guide] ✕   │
+│ • CRM_Contact_Mgmt.pdf (1.8 MB) ✓ [process] ✕       │
+└─────────────────────────────────────────────────────┘
+┌─ Billing (1 doc) ───────────────────────────────────┐
+│ • Billing_Operations.pdf (2.28 MB) ✓ [reference] ✕  │
+└─────────────────────────────────────────────────────┘
 
 ☑ Use Knowledge Base Context
-2 documents loaded (2.3 MB total)
+Filter by category: [All Categories ▼]  ← NEW!
+3 documents loaded across 2 categories (3.9 MB total)
 ```
 
 #### B. KB State Management (Week 4: 1-2 hours)
@@ -285,12 +368,17 @@ Knowledge Base Documents:
 // stores/useKBStore.ts
 interface KBState {
   kbDocuments: KBDocument[]
+  kbCategories: string[]  // NEW: List of all KB categories
+  selectedCategories: string[]  // NEW: Filter by selected categories
   selectedKBIds: string[]
   kbEnabled: boolean
   kbRelevanceThreshold: number
   maxKBDocuments: number
   
-  uploadKBDocument: (file: File, type: string) => Promise<void>
+  uploadKBDocument: (file: File, type: string, category: string) => Promise<void>  // NEW: category param
+  fetchCategories: () => Promise<void>  // NEW: Load categories from API
+  createCategory: (categoryName: string) => void  // NEW: Add new category
+  filterByCategory: (categories: string[]) => void  // NEW: Filter documents by category
   deleteKBDocument: (docId: string) => void
   toggleKBContext: (enabled: boolean) => void
   updateKBSettings: (settings: Partial<KBConfig>) => void
@@ -369,18 +457,23 @@ Max KB Documents:
 ```python
 # Unit Tests
 def test_kb_document_upload()
+def test_kb_document_upload_with_category()  # NEW
 def test_kb_document_deduplication()
 def test_kb_document_deletion()
 def test_kb_context_building()
+def test_kb_context_by_category()  # NEW: Test category filtering
 def test_kb_context_truncation()
 def test_kb_compliance_scoring()
 def test_pdf_extraction()
+def test_get_categories()  # NEW: Test category retrieval
 
 # Integration Tests
 def test_kb_upload_to_generation()
 def test_kb_context_in_prompts()
 def test_generation_with_kb()
+def test_generation_with_kb_category_filter()  # NEW: Test with category filtering
 def test_export_with_kb_references()
+def test_category_auto_detection()  # NEW: Test smart category detection
 ```
 
 ### Frontend Tests (1-2 hours)
@@ -388,7 +481,10 @@ def test_export_with_kb_references()
 ```javascript
 // UI Tests
 test('KB upload zone drag and drop')
-test('KB document list display')
+test('KB category dropdown populates with existing categories')  // NEW
+test('KB create new category input')  // NEW
+test('KB document list display grouped by category')  // NEW: Test category grouping
+test('KB category filter dropdown')  // NEW
 test('KB toggle persistence')
 test('KB settings save')
 test('KB compliance badge display')
@@ -399,13 +495,26 @@ test('KB export options')
 ### Sample KB Documents for Testing
 
 1. **CRM_User_Guide_DT_Postpaid_20251015.pdf**
+   - Category: CRM  ← NEW
    - Sections: 2.21 Subscription Maintenance, 2.3 Subscription Contact
    
 2. **Case_Management_User_Guide_POSTPAID.pdf**
+   - Category: Customer Service  ← NEW
    - Sections: 4.1 Create Case, 4.2 Task Assignment
 
 3. **Backend_Operations_5G_Service.pdf**
+   - Category: Network  ← NEW
    - Sections: Service initiation, equipment allocation
+
+**Suggested Initial Categories:**
+- CRM
+- Billing
+- Network
+- Customer Service
+- Provisioning
+- Mobile App
+- Web Portal
+- General
 
 ---
 

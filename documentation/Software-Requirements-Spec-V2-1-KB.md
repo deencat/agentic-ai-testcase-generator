@@ -188,17 +188,20 @@ interface GenerationState {
 ## KB Document Upload Flow (NEW)
 
 ```
+User Selects Category → Frontend loads categories from GET /api/v1/knowledge-base/categories (NEW)
+  ↓
 User Drags KB File → Frontend (Client Component)
-  ├─> Validate (size ≤ 5MB, type=PDF/text)
-  └─> POST /api/v1/knowledge-base
+  ├─> Select category (dropdown or create new) (NEW)
+  ├─> Validate (size ≤ 5MB, type=PDF/text, category required) (NEW)
+  └─> POST /api/v1/knowledge-base (with category param) (NEW)
        ↓
 Backend (FastAPI)
-  ├─> Receive multipart/form-data
+  ├─> Receive multipart/form-data + category (NEW)
   ├─> Extract text (PyPDF2 or raw text)
   ├─> Hash for deduplication (SHA-256)
-  ├─> Create KnowledgeBaseDocument record
-  ├─> Store metadata (name, type, size)
-  └─> Return { docId, name, type, extractedLength }
+  ├─> Create KnowledgeBaseDocument record (with category) (NEW)
+  ├─> Store metadata (name, type, category, size) (NEW)
+  └─> Return { docId, name, type, category, extractedLength } (NEW)
        ↓
 Frontend
   └─> Update KBStore.kbDocuments
@@ -451,6 +454,7 @@ CREATE TABLE knowledge_base_documents (
     doc_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     doc_name VARCHAR(255) NOT NULL,
     doc_type VARCHAR(50) NOT NULL CHECK (doc_type IN ('system_guide', 'process', 'reference', 'product')),
+    category VARCHAR(100) NOT NULL,  -- NEW: User-defined category (e.g., 'CRM', 'Billing', 'Network')
     doc_description TEXT,
     content TEXT NOT NULL,  -- Full extracted text
     file_size INTEGER NOT NULL,
@@ -466,6 +470,7 @@ CREATE TABLE knowledge_base_documents (
 );
 
 CREATE INDEX idx_kb_doc_type ON knowledge_base_documents(doc_type);
+CREATE INDEX idx_kb_category ON knowledge_base_documents(category);  -- NEW: For fast category filtering
 CREATE INDEX idx_kb_doc_active ON knowledge_base_documents(is_active);
 CREATE INDEX idx_kb_doc_hash ON knowledge_base_documents(file_hash);
 CREATE INDEX idx_kb_doc_created ON knowledge_base_documents(created_at DESC);

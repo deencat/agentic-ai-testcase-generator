@@ -632,14 +632,25 @@ The **Executor Agent** SHALL:
 - API endpoint: `POST /api/v1/knowledge-base`
 - Accept PDF files and text documents
 - Extract and store full text content
-- Store metadata: name, type, description, file size, upload date
+- **NEW: Accept category selection (dropdown with existing categories or create new)**
+- Store metadata: name, type, category, description, file size, upload date
 - Deduplicate using file hash (SHA-256)
 - Validate file size (max 5 MB per document)
+- **NEW: Category must be provided (required field)**
+
+### FR-7.1a: KB Category Management (NEW)
+- API endpoint: `GET /api/v1/knowledge-base/categories`
+- Return list of all unique categories from existing KB documents
+- Used to populate category dropdown in upload UI
+- Categories are user-defined strings (e.g., 'CRM', 'Billing', 'Network')
+- Support creating new categories during upload
 
 ### FR-7.2: KB Document Listing
 - API endpoint: `GET /api/v1/knowledge-base`
-- Display uploaded KB documents with metadata
+- Display uploaded KB documents with metadata (including category)
+- **NEW: Group documents by category in UI**
 - Filter by document type (system_guide, process, reference, product)
+- **NEW: Filter by category (single or multiple categories)**
 - Filter by active status
 - Sort by upload date (newest first)
 
@@ -651,8 +662,14 @@ The **Executor Agent** SHALL:
 ### FR-7.4: KB Document Integration with Generation
 - Update `POST /api/v1/generate` endpoint
 - Accept parameter: `useKnowledgeBase` (boolean)
-- Accept parameter: `kbDocIds` (array of selected KB document IDs)
+- Accept parameter: `kbDocIds` (array of selected KB document IDs) **OR**
+- **NEW: Accept parameter: `kbCategories` (array of categories to filter KB docs)**
+- **NEW: Filter KB documents by categories for relevant context only**
 - Pass KB context to agents during generation
+- **Benefits of category filtering:**
+  - Reduces irrelevant context (only CRM docs for CRM test cases)
+  - Stays within token limits (2-3 relevant docs vs 10 total docs)
+  - Improves test case precision and KB compliance score
 
 ### FR-7.5: KB Search Capability (Phase 2)
 - API endpoint: `POST /api/v1/knowledge-base/search`
@@ -748,6 +765,7 @@ New table: `knowledge_base_documents`
 - project_id (UUID, foreign key, optional for project-specific KB)
 - doc_name (VARCHAR)
 - doc_type (ENUM: system_guide, process, reference, product)
+- category (VARCHAR - user-defined, e.g., 'CRM', 'Billing', 'Network') **NEW**
 - content (TEXT - extracted from PDF)
 - file_size (INTEGER)
 - file_hash (VARCHAR - SHA-256 for deduplication)
