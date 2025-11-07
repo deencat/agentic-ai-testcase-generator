@@ -46,7 +46,8 @@ This SRS details the technical specifications for implementing the Agentic AI Te
 │            FastAPI (Python 3.10+) - Async                   │
 │  ┌──────────────┬──────────────────┬────────────────────┐   │
 │  │ API Routes   │ LLM Service      │ KB Service (NEW)   │   │
-│  │ /api/v1/*    │ (Ollama/OR)      │ /knowledge-base/*  │   │
+│  │ /api/v1/*    │ (Ollama/OR/DS/   │ /knowledge-base/*  │   │
+│  │              │  Gemini)         │                    │   │
 │  │              │                  │ • Upload          │   │
 │  │ NEW:         │ Generator Agent  │ • List            │   │
 │  │ /api/v1/     │ with KB context  │ • Delete          │   │
@@ -68,8 +69,10 @@ This SRS details the technical specifications for implementing the Agentic AI Te
 ┌─────────────────────────────────────────────────────────────┐
 │                   EXTERNAL SERVICES                          │
 │  • Ollama (http://127.0.0.1:11434) - Local LLM             │
-│  • OpenRouter (https://openrouter.ai) - Cloud LLM          │
+│  • OpenRouter (https://openrouter.ai) - Cloud LLM Aggregator│
 │  • Deepseek (https://api.deepseek.com) - Cloud LLM         │
+│  • Google Gemini (https://generativelanguage.googleapis.com)│
+│    - Cloud LLM                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -104,7 +107,7 @@ This SRS details the technical specifications for implementing the Agentic AI Te
 - Planner Agent → **ENHANCED: Uses KB to extract field names, procedures**
 - Generator Agent → **ENHANCED: Uses KB for realistic test steps**
 - Executor Agent → **ENHANCED: Validates against KB procedures**
-- LLMService: Abstraction layer for Ollama/OpenRouter/Deepseek
+- LLMService: Abstraction layer for Ollama/OpenRouter/Deepseek/Gemini
 
 **NEW Components:**
 - KBService: Manages KB document upload, storage, retrieval

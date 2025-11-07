@@ -23,9 +23,9 @@
 │     • Batch processing (up to 10 files)                   │
 │                                                            │
 │  2️⃣ CONFIGURE LLM                                         │
-│     • Select provider (Ollama local or OpenRouter/       │
-│       Deepseek cloud)                                     │
-│     • Choose model (llama3, mistral, GPT-4, etc.)        │
+│     • Select provider (Ollama, OpenRouter, Deepseek,     │
+│       or Google Gemini)                                  │
+│     • Choose model (llama3, mistral, GPT-4, gemini, etc.)│
 │     • Enter API key (for cloud providers)                │
 │     • Set parameters (temperature, max tokens)            │
 │     • Test connection                                     │
@@ -93,6 +93,8 @@
 │   Models: GPT-4, Claude, Llama-3, Mixtral, etc.       │
 │ • Deepseek (Cloud) - https://api.deepseek.com         │
 │   Models: deepseek-chat, deepseek-coder               │
+│ • Google Gemini (Cloud) - https://ai.google.dev       │
+│   Models: gemini-pro, gemini-1.5-pro, gemini-flash    │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -177,11 +179,13 @@
 ├────────────────────────────────────────────────────────────┤
 │  Developer A                 │  Developer B                │
 │  • Ollama client             │  • Generate button          │
-│  • OpenRouter/Deepseek       │  • Progress display         │
-│  • Provider switching        │  • SSE client (EventSource) │
-│  • Planner Agent             │  • Real-time updates        │
-│  • Generator Agent           │  • Auto-scroll              │
-│  • Executor Agent            │  • API key input UI         │
+│  • OpenRouter client         │  • Progress display         │
+│  • Deepseek client           │  • SSE client (EventSource) │
+│  • Google Gemini client      │  • Real-time updates        │
+│  • Provider switching        │  • Auto-scroll              │
+│  • Planner Agent             │  • API key input UI         │
+│  • Generator Agent           │  • Provider selection UI    │
+│  • Executor Agent            │                             │
 │  • SSE endpoint              │                             │
 │                              │                             │
 │  🔗 Integration: Week 6 Friday (3-4 hours)                 │

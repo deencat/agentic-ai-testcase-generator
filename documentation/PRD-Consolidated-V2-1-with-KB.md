@@ -122,7 +122,7 @@ Build an intelligent, agentic AI system that automatically generates industry-st
 1. **Multi-Agent Expertise**: Specialized agents for planning, generation, and validation (similar to Playwright test agents)
 2. **Format Fidelity**: Output matches actual UAT format with horizontal multi-system layout
 3. **Knowledge Base Integration**: NEW - Agents reference system documentation for accurate procedures and field names
-4. **Configurable Intelligence**: Support both local Ollama and cloud OpenRouter LLMs without restart
+4. **Configurable Intelligence**: Support local (Ollama) and cloud (OpenRouter, Deepseek, Google Gemini) LLMs with hot-reload
 5. **Cross-System Intelligence**: Understands 13 distinct system components and their dependencies
 6. **User-Friendly Interface**: Python/Web-based with drag-and-drop input, real-time configuration, instant results
 
@@ -193,7 +193,9 @@ Build an intelligent, agentic AI system that automatically generates industry-st
 
 ### 3. LLM Integration
 - [x] Ollama support (local LLM via HTTP)
-- [x] OpenRouter support (cloud LLM via HTTPS)
+- [x] OpenRouter support (cloud LLM aggregator via HTTPS)
+- [x] Deepseek support (cloud LLM via HTTPS)
+- [x] Google Gemini API support (cloud LLM via HTTPS)
 - [x] Hot-reload configuration (changes apply immediately, no restart)
 - [x] Connection testing (validate LLM availability before generation)
 - **[NEW] KB context configuration options**
@@ -231,12 +233,12 @@ Build an intelligent, agentic AI system that automatically generates industry-st
 - [x] Basic KB retrieval (Phase 1) + semantic search (Phase 2)
 
 ## Phase 2 - Enhancement
-- [ ] OpenRouter integration (cloud LLM)
 - [ ] PowerPoint and Excel parsing (direct, not PDF)
 - [ ] CSV and PDF export enhancements
 - [ ] Advanced hot-reload features
 - [ ] Batch processing UI improvements
 - [ ] Performance optimization
+- [ ] Additional cloud LLM providers (as needed)
 - [ ] Vector embeddings for KB semantic search
 - [ ] Hybrid BM25 + semantic retrieval
 
@@ -307,8 +309,8 @@ Build an intelligent, agentic AI system that automatically generates industry-st
 
 ## Epic 3: LLM Configuration
 
-**US-3.1** As a QA Engineer, I want to configure the LLM provider (Ollama/OpenRouter) via UI, so that I can switch between local and cloud models.
-- Acceptance Criteria: Radio buttons for provider selection, model name input, endpoint configuration
+**US-3.1** As a QA Engineer, I want to configure the LLM provider (Ollama/OpenRouter/Deepseek/Gemini) via UI, so that I can switch between local and cloud models.
+- Acceptance Criteria: Radio buttons for provider selection (Ollama, OpenRouter, Deepseek, Google Gemini), model name input, API key field (for cloud providers), endpoint configuration
 
 **US-3.2** As a QA Engineer, I want to specify model parameters (temperature, max tokens), so that I can control generation quality.
 - Acceptance Criteria: Temperature slider 0.0-2.0, token input 100-8000, save/apply buttons
@@ -488,7 +490,7 @@ The **Executor Agent** SHALL:
 
 ## FR-3: LLM Integration and Configuration
 
-### FR-3.1: Ollama Support
+### FR-3.1: Ollama Support (Local LLM)
 - System SHALL support Ollama local LLM integration
 - Connect via HTTP API (default http://127.0.0.1:11434/api)
 - Support models: llama3, llama3.1, mistral, codellama, etc.
@@ -496,20 +498,37 @@ The **Executor Agent** SHALL:
 - Validate connection on configuration save
 - Support offline operation with pre-downloaded models
 
-### FR-3.2: OpenRouter Support
+### FR-3.2: OpenRouter Support (Cloud LLM Aggregator)
 - System SHALL support OpenRouter cloud LLM integration
 - Connect via HTTPS API (https://openrouter.ai/api/v1)
 - Require API key authentication
-- Support models: GPT-4, Claude, Llama-3, Mixtral, etc.
+- Support models: GPT-4, Claude, Llama-3, Mixtral, Gemini, etc.
 - Display model availability and pricing if applicable
 - Validate API key before enabling
 
-### FR-3.3: Configuration Management
+### FR-3.3: Deepseek Support (Cloud LLM)
+- System SHALL support Deepseek cloud LLM integration
+- Connect via HTTPS API (https://api.deepseek.com)
+- Require API key authentication
+- Support models: deepseek-chat, deepseek-coder
+- Validate API key before enabling
+
+### FR-3.4: Google Gemini API Support (Cloud LLM)
+- System SHALL support Google Gemini API integration
+- Connect via HTTPS API (https://generativelanguage.googleapis.com)
+- Require API key authentication
+- Support models: gemini-pro, gemini-1.5-pro, gemini-flash
+- Validate API key before enabling
+- Handle Google-specific authentication and request formats
+
+### FR-3.5: Configuration Management
 - System SHALL provide UI for LLM configuration (provider, model, parameters)
+- Support provider selection (Ollama, OpenRouter, Deepseek, Google Gemini)
 - Support temperature setting (0.0-2.0)
 - Support max tokens setting (100-8000)
+- Conditional API key input (visible only for cloud providers)
 - Implement hot-reload (changes apply without restart)
-- Provide connection test functionality
+- Provide connection test functionality for all providers
 
 ### FR-3.4: Knowledge Base Configuration (NEW)
 - System SHALL provide KB configuration options in Settings
@@ -597,10 +616,11 @@ The **Executor Agent** SHALL:
 
 ### FR-6.5: Configuration Section
 - Slide-in drawer from right side (350-400px width)
-- LLM provider selection (Ollama/OpenRouter)
+- LLM provider selection (Ollama/OpenRouter/Deepseek/Gemini) via radio buttons
 - Model selection and base URL input
+- Conditional API key input field (show only for cloud providers)
 - Temperature and max tokens sliders
-- Connection test button
+- Connection test button for all providers
 - **NEW: KB configuration options (enable, threshold, max documents)**
 - [Save Changes] [Restore Defaults] buttons
 
@@ -752,7 +772,7 @@ Updated: `configurations` table
 **Frontend**: Next.js 14 (App Router) + React + Tailwind CSS + Shadcn/ui  
 **Database**: PostgreSQL 15+ (local development)  
 **State Management**: Zustand (lightweight, Copilot-friendly)  
-**LLM Integration**: Ollama (local) + OpenRouter (cloud)  
+**LLM Integration**: Ollama (local), OpenRouter, Deepseek, Google Gemini API (cloud)  
 
 See **Software-Requirements-Specification.md** for complete technical details.
 
@@ -809,7 +829,9 @@ See **Software-Requirements-Specification.md** for complete technical details.
 
 ## External Dependencies
 - Ollama (local LLM) - if using local mode
-- OpenRouter API (cloud LLM) - if using cloud mode
+- OpenRouter API (cloud LLM aggregator) - if using cloud mode
+- Deepseek API (cloud LLM) - if using Deepseek mode
+- Google Gemini API (cloud LLM) - if using Gemini mode
 - PostgreSQL 15+ (for local development)
 - Python 3.10+ with FastAPI, SQLAlchemy, PyPDF2, etc.
 - Node.js 20+ with Next.js, React, Tailwind CSS
@@ -817,7 +839,7 @@ See **Software-Requirements-Specification.md** for complete technical details.
 ## Assumptions
 - QA team has access to Jira and Marketing materials
 - System documentation (User Guides, Operational Manuals) will be provided
-- Ollama or OpenRouter API key available
+- API keys available for selected cloud LLM providers (OpenRouter, Deepseek, or Gemini)
 - Users have Windows/Mac/Linux with 1GB+ RAM
 - Internet not required (works offline with local Ollama)
 
@@ -924,6 +946,7 @@ See **Software-Requirements-Specification.md** for complete technical details.
 - Core agentic AI framework (Planner, Generator, Executor)
 - PDF and text input support
 - Ollama integration (local LLM)
+- OpenRouter, Deepseek, Google Gemini API integration (cloud LLMs)
 - **Knowledge Base document upload, storage, and agent integration**
 - Horizontal multi-system test case format
 - Basic Excel, Markdown export

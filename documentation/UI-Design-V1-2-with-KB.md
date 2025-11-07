@@ -593,9 +593,14 @@ Knowledge Base Documents (displayed below):
                         │ LLM PROVIDER              │
                         │ ◉ Ollama (Local)         │
                         │ ◯ OpenRouter (Cloud)     │
+                        │ ◯ Deepseek (Cloud)       │
+                        │ ◯ Google Gemini (Cloud)  │
                         │                           │
                         │ Base URL:                 │
                         │ [http://127.0.0.1:...]   │
+                        │                           │
+                        │ API Key: (Cloud Only)     │
+                        │ [••••••••••••••]         │
                         │                           │
                         │ Model: [llama3 ▼]        │
                         │ [🔄 Test Connection]     │

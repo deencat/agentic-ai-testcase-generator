@@ -119,7 +119,7 @@ Build a workable MVP of an AI-powered test case generator that reduces test case
 - Frontend: Next.js 14 (App Router) with Tailwind + Shadcn/ui
 - Backend: FastAPI (Python) with async LLM integration
 - Database: PostgreSQL with SQLAlchemy ORM
-- LLM: Ollama (local) integration
+- LLM: Ollama (local), OpenRouter, Deepseek, Google Gemini API (cloud)
 - **NEW:** Knowledge Base document storage and retrieval
 
 ✅ **Minimum Viable Features**:
@@ -166,8 +166,11 @@ Build a workable MVP of an AI-powered test case generator that reduces test case
 
 3. **LLM Integration**
    - Ollama support (local LLM) with connection testing
-   - OpenRouter/Deepseek support (cloud LLM) with API key authentication
-   - Configuration UI (provider, model, temperature, max tokens)
+   - OpenRouter support (cloud LLM aggregator) with API key authentication
+   - Deepseek support (cloud LLM) with API key authentication
+   - Google Gemini API support (cloud LLM) with API key authentication
+   - Configuration UI (provider, model, temperature, max tokens, API key)
+   - Provider abstraction layer for seamless switching
    - Hot-reload configuration (no restart required)
 
 4. **Test Case Management**
@@ -240,9 +243,14 @@ Build a workable MVP of an AI-powered test case generator that reduces test case
    - Repository pattern implementation
 
 3. **LLM Integration**
-   - Ollama client implementation (httpx)
+   - Ollama client implementation (httpx) - local LLM
+   - OpenRouter client implementation - cloud LLM aggregator
+   - Deepseek client implementation - cloud LLM
+   - Google Gemini API client implementation - cloud LLM
    - Agent architecture (Planner, Generator, Executor)
    - Prompt engineering
+   - Provider abstraction layer for seamless switching
+   - API key authentication for cloud providers
    - Server-Sent Events (SSE) for progress tracking
 
 4. **Document Processing**
@@ -550,9 +558,9 @@ Week 12:   Polish, Documentation & Deployment
 - [ ] Build configuration drawer:
   - Create `ConfigDrawer` component (Shadcn Sheet)
   - Slide-in from right animation
-  - Form fields (provider, model, baseUrl, temperature, maxTokens)
-  - Radio buttons for provider selection (Ollama/OpenRouter/Deepseek)
-  - API key input field (for OpenRouter/Deepseek)
+  - Form fields (provider, model, baseUrl, temperature, maxTokens, apiKey)
+  - Radio buttons for provider selection (Ollama/OpenRouter/Deepseek/Gemini)
+  - API key input field (for OpenRouter/Deepseek/Gemini)
   - Base URL input (for Ollama custom, OpenRouter, Deepseek)
   - Temperature slider
   - Max tokens input
@@ -611,13 +619,15 @@ Week 12:   Polish, Documentation & Deployment
 **Week 5:**
 - [ ] Create `LLMService` class:
   - Abstract base class for LLM providers
-  - `OllamaClient` implementation
-  - `OpenRouterClient` implementation (cloud LLM)
+  - `OllamaClient` implementation (local LLM)
+  - `OpenRouterClient` implementation (cloud LLM aggregator)
   - `DeepseekClient` implementation (cloud LLM)
+  - `GeminiClient` implementation (Google Gemini API)
   - Async HTTP calls with httpx
-  - API key authentication for cloud providers
+  - API key authentication for cloud providers (OpenRouter, Deepseek, Gemini)
   - Error handling and retries
   - Timeout management
+  - Provider abstraction layer for seamless switching
 - [ ] Implement Planner Agent **with KB integration**:
   - Create `PlannerAgent` class
   - Design prompt template (system + user) **with KB context section**
@@ -663,8 +673,10 @@ Week 12:   Polish, Documentation & Deployment
 
 **Deliverables:**
 - ✅ Ollama client working (local LLM)
-- ✅ OpenRouter/Deepseek client working (cloud LLM)
-- ✅ Provider switching functional (Ollama ↔ OpenRouter ↔ Deepseek)
+- ✅ OpenRouter client working (cloud LLM aggregator)
+- ✅ Deepseek client working (cloud LLM)
+- ✅ Google Gemini API client working (cloud LLM)
+- ✅ Provider switching functional (Ollama ↔ OpenRouter ↔ Deepseek ↔ Gemini)
 - ✅ Three agents implemented and tested **with KB integration**
 - ✅ **KB context builder functional**
 - ✅ **KB compliance scoring working**
@@ -1595,12 +1607,14 @@ Check for: completeness, error handling, tests, and integration points.
 
 ✅ **LLM Integration**
 - Ollama connection working (local LLM)
-- OpenRouter/Deepseek connection working (cloud LLM)
-- Provider switching functional
-- Configuration UI functional
+- OpenRouter connection working (cloud LLM aggregator)
+- Deepseek connection working (cloud LLM)
+- Google Gemini API connection working (cloud LLM)
+- Provider switching functional (Ollama ↔ OpenRouter ↔ Deepseek ↔ Gemini)
+- Configuration UI functional with provider selection
 - **NEW: KB configuration options (threshold, max docs)**
 - Hot-reload configuration (no restart)
-- Test connection feature
+- Test connection feature for all providers
 - **NEW: KB context toggle on/off**
 
 ✅ **Test Case Management**
