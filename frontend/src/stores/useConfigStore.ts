@@ -14,6 +14,16 @@
 import { create } from 'zustand';
 
 /**
+ * KB Configuration interface
+ */
+interface KBConfig {
+  /** Similarity threshold (0.0-1.0) */
+  threshold: number;
+  /** Maximum KB documents to use */
+  maxDocs: number;
+}
+
+/**
  * State interface for LLM configuration
  */
 interface ConfigState {
@@ -35,6 +45,9 @@ interface ConfigState {
   /** Whether LLM connection is active */
   isConnected: boolean;
   
+  /** Knowledge Base configuration */
+  kbConfig: KBConfig;
+  
   /** Set LLM provider */
   setLlmProvider: (provider: 'ollama' | 'openrouter' | 'deepseek' | 'gemini') => void;
   
@@ -52,6 +65,9 @@ interface ConfigState {
   
   /** Set connection status */
   setIsConnected: (connected: boolean) => void;
+  
+  /** Set KB configuration */
+  setKbConfig: (config: Partial<KBConfig>) => void;
   
   /** Reset all config to defaults */
   reset: () => void;
@@ -80,12 +96,19 @@ export const useConfigStore = create<ConfigState>((set) => ({
   temperature: 0.7,
   maxTokens: 2048,
   isConnected: false,
+  kbConfig: {
+    threshold: 0.7,
+    maxDocs: 5,
+  },
   setLlmProvider: (provider) => set({ llmProvider: provider }),
   setApiKey: (key) => set({ apiKey: key }),
   setModelName: (name) => set({ modelName: name }),
   setTemperature: (temp) => set({ temperature: temp }),
   setMaxTokens: (tokens) => set({ maxTokens: tokens }),
   setIsConnected: (connected) => set({ isConnected: connected }),
+  setKbConfig: (config) => set((state) => ({ 
+    kbConfig: { ...state.kbConfig, ...config } 
+  })),
   reset: () =>
     set({
       llmProvider: 'ollama',
@@ -94,5 +117,9 @@ export const useConfigStore = create<ConfigState>((set) => ({
       temperature: 0.7,
       maxTokens: 2048,
       isConnected: false,
+      kbConfig: {
+        threshold: 0.7,
+        maxDocs: 5,
+      },
     }),
 }));

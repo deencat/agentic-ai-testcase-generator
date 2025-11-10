@@ -7,12 +7,12 @@
  * - File upload zone for requirements (PDF, Excel)
  * - Knowledge Base document upload zone
  * - Text input area for manual requirements
+ * - Configuration drawer for LLM and KB settings
+ * - Status indicators for LLM and KB
  * 
  * Week 2 Status: ✅ Complete - Basic layout
  * Week 3 Status: ✅ Complete - File upload & KB upload
- * Week 4 TODOs:
- * - Add configuration drawer
- * - Connect to backend upload API
+ * Week 4 Status: ✅ Complete - Configuration drawer & status indicators
  * 
  * @page
  */
@@ -25,8 +25,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { FileUploadZone } from '@/components/FileUploadZone';
 import { KBUploadZone } from '@/components/KBUploadZone';
+import { ConfigDrawer } from '@/components/ConfigDrawer';
+import { StatusIndicators } from '@/components/StatusIndicators';
 import { useGenerationStore } from '@/stores/useGenerationStore';
 import { api } from '@/lib/api';
+import { Settings } from 'lucide-react';
 
 /**
  * Home/Dashboard page component
@@ -41,6 +44,9 @@ export default function Home() {
 
   // Text input from store
   const { textInput, setTextInput } = useGenerationStore();
+
+  // Configuration drawer state
+  const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
 
   // On mount: check API connection and load projects
   useEffect(() => {
@@ -141,14 +147,24 @@ export default function Home() {
       </Card>
 
       {/* Configuration & Generate Section */}
+      <StatusIndicators />
+      
       <div className="flex gap-4 mb-8">
-        <Button variant="outline" className="flex-1" disabled>
-          ⚙️ Configuration (Coming in Week 4)
+        <Button 
+          variant="outline" 
+          className="flex-1"
+          onClick={() => setConfigDrawerOpen(true)}
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          Configuration
         </Button>
         <Button className="flex-1 bg-green-600 hover:bg-green-700" disabled>
           🚀 Generate Test Cases (Coming in Week 5-6)
         </Button>
       </div>
+
+      {/* Configuration Drawer */}
+      <ConfigDrawer open={configDrawerOpen} onOpenChange={setConfigDrawerOpen} />
 
       {/* Projects Section */}
       <div className="mt-8">
