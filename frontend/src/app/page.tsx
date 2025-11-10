@@ -1,3 +1,22 @@
+/**
+ * Dashboard Page
+ * Main landing page showing overview and project status
+ * 
+ * Features:
+ * - Backend connection status indicator
+ * - Quick action cards for main features (Upload, KB, Config)
+ * - Projects list with mock/real data
+ * - Auto-connects to API on mount
+ * 
+ * Week 2 Status: ✅ Complete
+ * Week 3 TODOs:
+ * - Replace "Coming in Week 3" placeholders with actual upload functionality
+ * - Add drag-and-drop file upload zone
+ * - Add KB document upload zone
+ * 
+ * @page
+ */
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,10 +25,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 
+/**
+ * Home/Dashboard page component
+ * Shows backend status and project overview
+ */
 export default function Home() {
+  // Connection status: checking -> connected/disconnected
   const [healthStatus, setHealthStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  
+  // Projects list from backend (or mock data)
   const [projects, setProjects] = useState<any[]>([]);
 
+  // On mount: check API connection and load projects
   useEffect(() => {
     // Test API connection
     const checkConnection = async () => {
@@ -35,6 +62,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-8 py-8">
+      {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -43,6 +71,8 @@ export default function Home() {
               Generate AI-powered test cases with Knowledge Base integration
             </p>
           </div>
+          
+          {/* Backend Connection Status Badge */}
           <div className="flex items-center gap-4">
             <Badge variant={healthStatus === 'connected' ? 'default' : 'destructive'}>
               {healthStatus === 'checking' ? 'Checking...' : 
@@ -52,7 +82,9 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Quick Action Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Upload Files Card */}
         <Card>
           <CardHeader>
             <CardTitle>Upload Files</CardTitle>
@@ -67,6 +99,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
+        {/* Knowledge Base Card */}
         <Card>
           <CardHeader>
             <CardTitle>Knowledge Base</CardTitle>
@@ -81,6 +114,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
+        {/* Configuration Card */}
         <Card>
           <CardHeader>
             <CardTitle>Configuration</CardTitle>
@@ -96,6 +130,7 @@ export default function Home() {
         </Card>
       </div>
 
+      {/* Projects Section */}
       <div className="mt-8">
         <Card>
           <CardHeader>
