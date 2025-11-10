@@ -14,6 +14,11 @@
 import { create } from 'zustand';
 
 /**
+ * Upload status type
+ */
+type UploadStatus = 'idle' | 'uploading' | 'success' | 'error';
+
+/**
  * State interface for generation workflow
  */
 interface GenerationState {
@@ -32,11 +37,29 @@ interface GenerationState {
   /** Current step in generation workflow (e.g., "Planning", "Generating") */
   currentStep: string;
   
+  /** Upload status */
+  uploadStatus: UploadStatus;
+  
+  /** Upload error message */
+  uploadError: string | null;
+  
   /** Add a file to the upload queue */
   addFile: (file: File) => void;
   
+  /** Add multiple files to the upload queue */
+  addFiles: (files: File[]) => void;
+  
   /** Remove a file from the upload queue by name */
   removeFile: (fileName: string) => void;
+  
+  /** Clear all files */
+  clearFiles: () => void;
+  
+  /** Set upload status */
+  setUploadStatus: (status: UploadStatus) => void;
+  
+  /** Set upload error */
+  setUploadError: (error: string | null) => void;
   
   /** Update text input */
   setTextInput: (text: string) => void;
@@ -76,11 +99,17 @@ export const useGenerationStore = create<GenerationState>((set) => ({
   isGenerating: false,
   progress: 0,
   currentStep: '',
+  uploadStatus: 'idle',
+  uploadError: null,
   addFile: (file) => set((state) => ({ files: [...state.files, file] })),
+  addFiles: (newFiles) => set((state) => ({ files: [...state.files, ...newFiles] })),
   removeFile: (fileName) =>
     set((state) => ({
       files: state.files.filter((f) => f.name !== fileName),
     })),
+  clearFiles: () => set({ files: [] }),
+  setUploadStatus: (status) => set({ uploadStatus: status }),
+  setUploadError: (error) => set({ uploadError: error }),
   setTextInput: (text) => set({ textInput: text }),
   setIsGenerating: (isGenerating) => set({ isGenerating }),
   setProgress: (progress) => set({ progress }),
@@ -92,5 +121,7 @@ export const useGenerationStore = create<GenerationState>((set) => ({
       isGenerating: false,
       progress: 0,
       currentStep: '',
+      uploadStatus: 'idle',
+      uploadError: null,
     }),
 }));

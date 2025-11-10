@@ -4,15 +4,15 @@
  * 
  * Features:
  * - Backend connection status indicator
- * - Quick action cards for main features (Upload, KB, Config)
- * - Projects list with mock/real data
- * - Auto-connects to API on mount
+ * - File upload zone for requirements (PDF, Excel)
+ * - Knowledge Base document upload zone
+ * - Text input area for manual requirements
  * 
- * Week 2 Status: ✅ Complete
- * Week 3 TODOs:
- * - Replace "Coming in Week 3" placeholders with actual upload functionality
- * - Add drag-and-drop file upload zone
- * - Add KB document upload zone
+ * Week 2 Status: ✅ Complete - Basic layout
+ * Week 3 Status: ✅ Complete - File upload & KB upload
+ * Week 4 TODOs:
+ * - Add configuration drawer
+ * - Connect to backend upload API
  * 
  * @page
  */
@@ -23,6 +23,9 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { FileUploadZone } from '@/components/FileUploadZone';
+import { KBUploadZone } from '@/components/KBUploadZone';
+import { useGenerationStore } from '@/stores/useGenerationStore';
 import { api } from '@/lib/api';
 
 /**
@@ -35,6 +38,9 @@ export default function Home() {
   
   // Projects list from backend (or mock data)
   const [projects, setProjects] = useState<any[]>([]);
+
+  // Text input from store
+  const { textInput, setTextInput } = useGenerationStore();
 
   // On mount: check API connection and load projects
   useEffect(() => {
@@ -82,52 +88,66 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Quick Action Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Upload Files Card */}
+      {/* Main Upload Section */}
+      <div className="grid gap-6 lg:grid-cols-2 mb-8">
+        {/* Requirements Upload Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Upload Files</CardTitle>
+            <CardTitle>Upload Requirements</CardTitle>
             <CardDescription>
-              Upload PDF or Excel files to generate test cases
+              Upload PDF or Excel files containing requirements
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" disabled>
-              Coming in Week 3
-            </Button>
+            <FileUploadZone />
           </CardContent>
         </Card>
 
-        {/* Knowledge Base Card */}
+        {/* Knowledge Base Upload Card */}
         <Card>
           <CardHeader>
             <CardTitle>Knowledge Base</CardTitle>
             <CardDescription>
-              Upload documentation for better test case quality
+              Upload documentation to improve test case quality (+40-60%)
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" disabled>
-              Coming in Week 3
-            </Button>
+            <KBUploadZone />
           </CardContent>
         </Card>
+      </div>
 
-        {/* Configuration Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Configuration</CardTitle>
-            <CardDescription>
-              Configure LLM settings and API keys
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" disabled>
-              Coming in Week 4
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Text Input Section */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Or Enter Requirements Manually</CardTitle>
+          <CardDescription>
+            Type or paste your requirements here (alternative to file upload)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <textarea
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            className="w-full min-h-[200px] p-4 border rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter your requirements here...&#10;&#10;Example:&#10;- User login functionality&#10;- Password reset feature&#10;- Profile management"
+          />
+          {textInput && (
+            <p className="text-sm text-muted-foreground mt-2">
+              {textInput.length} characters
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Configuration & Generate Section */}
+      <div className="flex gap-4 mb-8">
+        <Button variant="outline" className="flex-1" disabled>
+          ⚙️ Configuration (Coming in Week 4)
+        </Button>
+        <Button className="flex-1 bg-green-600 hover:bg-green-700" disabled>
+          🚀 Generate Test Cases (Coming in Week 5-6)
+        </Button>
       </div>
 
       {/* Projects Section */}
@@ -137,7 +157,7 @@ export default function Home() {
             <CardTitle>Projects</CardTitle>
             <CardDescription>
               {projects.length === 0 
-                ? 'No projects yet. Create your first project to get started.'
+                ? 'No projects yet. Upload files to create your first project.'
                 : `You have ${projects.length} project(s)`}
             </CardDescription>
           </CardHeader>
