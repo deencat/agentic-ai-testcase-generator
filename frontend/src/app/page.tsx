@@ -28,6 +28,7 @@ import { KBUploadZone } from '@/components/KBUploadZone';
 import { ConfigDrawer } from '@/components/ConfigDrawer';
 import { StatusIndicators } from '@/components/StatusIndicators';
 import { ProgressDisplay } from '@/components/ProgressDisplay';
+import { TestCaseList } from '@/components/TestCaseList';
 import { useGenerationStore } from '@/stores/useGenerationStore';
 import { useKBStore } from '@/stores/useKBStore';
 import { api } from '@/lib/api';
@@ -536,6 +537,11 @@ export default function Home() {
 
       {/* Configuration Drawer */}
       <ConfigDrawer open={configDrawerOpen} onOpenChange={setConfigDrawerOpen} />
+
+      {/* Test Cases Section (Week 7) */}
+      <div className="mt-8">
+        <TestCaseList />
+      </div>
 
       {/* Projects Section */}
       <div className="mt-8">
