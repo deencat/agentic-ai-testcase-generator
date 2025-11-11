@@ -29,9 +29,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { TestCaseCard } from '@/components/TestCaseCard';
 import { useTestCaseStore, TestCase } from '@/stores/useTestCaseStore';
-import { Loader2, AlertCircle, FileText, Filter, X } from 'lucide-react';
+import { Loader2, AlertCircle, FileText, Filter, X, Search } from 'lucide-react';
 
 /**
  * Props for TestCaseList component
@@ -55,9 +56,11 @@ export function TestCaseList({ projectId }: TestCaseListProps) {
     setTestCases,
     filterCategory,
     filterPriority,
+    searchText,
     sortBy,
     setFilterCategory,
     setFilterPriority,
+    setSearchText,
     setSortBy,
   } = useTestCaseStore();
 
@@ -253,6 +256,18 @@ export function TestCaseList({ projectId }: TestCaseListProps) {
   const getFilteredAndSortedTestCases = () => {
     let filtered = [...testCases];
 
+    // Filter by search text
+    if (searchText && searchText.trim() !== '') {
+      const search = searchText.toLowerCase();
+      filtered = filtered.filter(tc => 
+        tc.title.toLowerCase().includes(search) ||
+        tc.description.toLowerCase().includes(search) ||
+        tc.category.toLowerCase().includes(search) ||
+        tc.steps.some(step => step.toLowerCase().includes(search)) ||
+        tc.expectedResults.some(result => result.toLowerCase().includes(search))
+      );
+    }
+
     // Filter by category
     if (filterCategory && filterCategory !== 'all') {
       filtered = filtered.filter(tc => tc.category === filterCategory);
@@ -278,6 +293,11 @@ export function TestCaseList({ projectId }: TestCaseListProps) {
           return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
         case 'category':
           return a.category.localeCompare(b.category);
+        case 'kbCompliance':
+          // Sort by KB compliance: compliant first, then non-compliant, then undefined
+          const aCompliance = a.kbCompliant === true ? 2 : a.kbCompliant === false ? 1 : 0;
+          const bCompliance = b.kbCompliant === true ? 2 : b.kbCompliant === false ? 1 : 0;
+          return bCompliance - aCompliance;
         default:
           return 0;
       }
@@ -300,6 +320,7 @@ export function TestCaseList({ projectId }: TestCaseListProps) {
   const handleClearFilters = () => {
     setFilterCategory('all');
     setFilterPriority('all');
+    setSearchText('');
     setShowKBOnly(false);
   };
 
@@ -309,6 +330,7 @@ export function TestCaseList({ projectId }: TestCaseListProps) {
   const hasActiveFilters = () => {
     return filterCategory !== 'all' || 
            filterPriority !== 'all' || 
+           searchText !== '' ||
            showKBOnly;
   };
 
@@ -361,6 +383,26 @@ export function TestCaseList({ projectId }: TestCaseListProps) {
         {testCases.length > 0 && (
           <CardContent>
             <div className="space-y-4">
+              {/* Search Input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search test cases by title, description, category, or steps..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-10"
+                />
+                {searchText && (
+                  <button
+                    onClick={() => setSearchText('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              
               {/* Filter Controls */}
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
@@ -405,6 +447,7 @@ export function TestCaseList({ projectId }: TestCaseListProps) {
                     <SelectItem value="id">ID</SelectItem>
                     <SelectItem value="priority">Priority</SelectItem>
                     <SelectItem value="category">Category</SelectItem>
+                    <SelectItem value="kbCompliance">KB Compliance</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -436,6 +479,11 @@ export function TestCaseList({ projectId }: TestCaseListProps) {
               {hasActiveFilters() && (
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm text-gray-500">Active filters:</span>
+                  {searchText && (
+                    <Badge variant="secondary">
+                      Search: "{searchText}"
+                    </Badge>
+                  )}
                   {filterCategory !== 'all' && (
                     <Badge variant="secondary">
                       Category: {filterCategory}

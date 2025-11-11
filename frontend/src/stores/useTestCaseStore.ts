@@ -64,8 +64,11 @@ interface TestCaseState {
   /** Active priority filter */
   filterPriority: string;
   
+  /** Search text for filtering */
+  searchText: string;
+  
   /** Sort field */
-  sortBy: 'id' | 'priority' | 'category';
+  sortBy: 'id' | 'priority' | 'category' | 'kbCompliance';
   
   /** Replace all test cases */
   setTestCases: (testCases: TestCase[]) => void;
@@ -88,8 +91,11 @@ interface TestCaseState {
   /** Set priority filter */
   setFilterPriority: (priority: string) => void;
   
+  /** Set search text */
+  setSearchText: (text: string) => void;
+  
   /** Set sort criteria */
-  setSortBy: (sortBy: 'id' | 'priority' | 'category') => void;
+  setSortBy: (sortBy: 'id' | 'priority' | 'category' | 'kbCompliance') => void;
   
   /** Reset all state */
   reset: () => void;
@@ -122,6 +128,7 @@ export const useTestCaseStore = create<TestCaseState>((set) => ({
   selectedTestCase: null,
   filterCategory: 'all',
   filterPriority: 'all',
+  searchText: '',
   sortBy: 'id',
   setTestCases: (testCases) => set({ testCases }),
   addTestCase: (testCase) =>
@@ -139,6 +146,7 @@ export const useTestCaseStore = create<TestCaseState>((set) => ({
   setSelectedTestCase: (testCase) => set({ selectedTestCase: testCase }),
   setFilterCategory: (category) => set({ filterCategory: category }),
   setFilterPriority: (priority) => set({ filterPriority: priority }),
+  setSearchText: (text) => set({ searchText: text }),
   setSortBy: (sortBy) => set({ sortBy }),
   reset: () =>
     set({
@@ -146,6 +154,7 @@ export const useTestCaseStore = create<TestCaseState>((set) => ({
       selectedTestCase: null,
       filterCategory: 'all',
       filterPriority: 'all',
+      searchText: '',
       sortBy: 'id',
     }),
 }));
