@@ -19,7 +19,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,9 +27,11 @@ import { FileUploadZone } from '@/components/FileUploadZone';
 import { KBUploadZone } from '@/components/KBUploadZone';
 import { ConfigDrawer } from '@/components/ConfigDrawer';
 import { StatusIndicators } from '@/components/StatusIndicators';
+import { ProgressDisplay } from '@/components/ProgressDisplay';
 import { useGenerationStore } from '@/stores/useGenerationStore';
 import { useKBStore } from '@/stores/useKBStore';
 import { api } from '@/lib/api';
+import { createMockSSE } from '@/lib/sse';
 import { Settings, Loader2, Sparkles, CheckCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
 
 /**
@@ -54,6 +56,17 @@ export default function Home() {
     currentStep,
     setProgress,
     setCurrentStep,
+    kbMessages,
+    addKBMessage,
+    clearKBMessages,
+    estimatedTimeRemaining,
+    setEstimatedTimeRemaining,
+    isCancelling,
+    setIsCancelling,
+    generatedTestCasesCount,
+    setGeneratedTestCasesCount,
+    kbComplianceScore,
+    setKBComplianceScore,
   } = useGenerationStore();
 
   // KB state
@@ -70,6 +83,12 @@ export default function Home() {
 
   // Text input collapse state
   const [isTextInputCollapsed, setIsTextInputCollapsed] = useState(false);
+
+  // SSE cleanup function ref
+  const sseCleanupRef = useRef<(() => void) | null>(null);
+
+  // Auto-scroll ref
+  const progressSectionRef = useRef<HTMLDivElement>(null);
 
   // Character limit for text input
   const MAX_TEXT_INPUT_LENGTH = 10000;
@@ -124,7 +143,7 @@ export default function Home() {
 
   /**
    * Handle generate button click
-   * Simulates generation workflow with progress tracking
+   * Uses SSE for real-time progress updates
    */
   const handleGenerate = async () => {
     // Validate inputs
@@ -132,56 +151,100 @@ export default function Home() {
       return;
     }
 
-    // Reset completion state
+    // Reset state
     setGenerationComplete(false);
+    clearKBMessages();
+    setGeneratedTestCasesCount(0);
+    setKBComplianceScore(null);
 
     // Start generation
     setIsGenerating(true);
     setProgress(0);
     setCurrentStep('Initializing...');
 
-    // Simulate generation workflow (will be replaced with real SSE in Week 6)
+    // Auto-scroll to progress section
+    setTimeout(() => {
+      progressSectionRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }, 100);
+
     try {
-      // Step 1: Planner Agent
-      setCurrentStep('Planner Agent: Analyzing requirements...');
-      await simulateProgress(0, 33, 2000);
-
-      if (useKnowledgeBase && kbDocuments.length > 0) {
-        setCurrentStep(`Planner Agent: Using ${kbDocuments.length} KB document(s) for context...`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      // Step 2: Generator Agent
-      setCurrentStep('Generator Agent: Creating test cases...');
-      await simulateProgress(33, 66, 2000);
-
-      if (useKnowledgeBase && kbDocuments.length > 0) {
-        setCurrentStep('Generator Agent: Including KB-sourced field names...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      // Step 3: Executor Agent
-      setCurrentStep('Executor Agent: Validating and refining...');
-      await simulateProgress(66, 100, 2000);
-
-      if (useKnowledgeBase && kbDocuments.length > 0) {
-        setCurrentStep('Executor Agent: Calculating KB compliance score...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      // Completion
-      setCurrentStep('Generation complete!');
-      setProgress(100);
-      setGenerationComplete(true);
-
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setIsGenerating(false);
-        setGenerationComplete(false);
-        setCurrentStep('');
-        setProgress(0);
-      }, 3000);
-
+      // Initialize SSE connection (using mock for now)
+      // TODO: Replace with real SSE when backend endpoint is ready
+      const cleanup = createMockSSE({
+        onOpen: () => {
+          console.log('SSE connection opened');
+          setCurrentStep('Connected to generation service...');
+        },
+        
+        onProgress: (event) => {
+          if (event.progress !== undefined) {
+            setProgress(event.progress);
+          }
+          if (event.estimatedTime !== undefined) {
+            setEstimatedTimeRemaining(event.estimatedTime);
+          }
+        },
+        
+        onStep: (event) => {
+          if (event.message) {
+            setCurrentStep(event.message);
+          }
+        },
+        
+        onKBMessage: (event) => {
+          if (event.kbMessage && useKnowledgeBase) {
+            addKBMessage(event.kbMessage);
+          }
+        },
+        
+        onTestCase: (event) => {
+          // Handle individual test case results
+          console.log('Test case received:', event.testCase);
+        },
+        
+        onComplete: (event) => {
+          setCurrentStep('Generation complete!');
+          setProgress(100);
+          setGenerationComplete(true);
+          
+          // Set final counts and scores
+          if (event.testCasesCount !== undefined) {
+            setGeneratedTestCasesCount(event.testCasesCount);
+          }
+          if (event.kbComplianceScore !== undefined) {
+            setKBComplianceScore(event.kbComplianceScore);
+          }
+          
+          // Reset after 5 seconds
+          setTimeout(() => {
+            setIsGenerating(false);
+            setGenerationComplete(false);
+            setCurrentStep('');
+            setProgress(0);
+            setEstimatedTimeRemaining(null);
+          }, 5000);
+        },
+        
+        onError: (error) => {
+          console.error('SSE Error:', error);
+          setIsGenerating(false);
+          setCurrentStep('Generation failed');
+          setValidationError(
+            error instanceof Error 
+              ? error.message 
+              : 'error' in error 
+              ? error.error || 'An error occurred'
+              : 'An error occurred during generation'
+          );
+        },
+      });
+      
+      // Store cleanup function
+      sseCleanupRef.current = cleanup;
+      
     } catch (error) {
       console.error('Generation error:', error);
       setIsGenerating(false);
@@ -191,18 +254,40 @@ export default function Home() {
   };
 
   /**
-   * Simulate smooth progress animation
+   * Handle cancel generation
    */
-  const simulateProgress = async (from: number, to: number, duration: number) => {
-    const steps = 20;
-    const increment = (to - from) / steps;
-    const delay = duration / steps;
-
-    for (let i = 0; i <= steps; i++) {
-      setProgress(Math.min(from + (increment * i), to));
-      await new Promise(resolve => setTimeout(resolve, delay));
+  const handleCancelGeneration = () => {
+    setIsCancelling(true);
+    
+    // Cleanup SSE connection
+    if (sseCleanupRef.current) {
+      sseCleanupRef.current();
+      sseCleanupRef.current = null;
     }
+    
+    // Reset state
+    setTimeout(() => {
+      setIsGenerating(false);
+      setIsCancelling(false);
+      setProgress(0);
+      setCurrentStep('Generation cancelled');
+      setEstimatedTimeRemaining(null);
+      
+      // Clear cancelled message after 3 seconds
+      setTimeout(() => {
+        setCurrentStep('');
+      }, 3000);
+    }, 500);
   };
+
+  // Cleanup SSE on unmount
+  useEffect(() => {
+    return () => {
+      if (sseCleanupRef.current) {
+        sseCleanupRef.current();
+      }
+    };
+  }, []);
 
   /**
    * Determine if generate button should be disabled
@@ -350,63 +435,67 @@ export default function Home() {
         </div>
       )}
 
-      {/* Progress Display (Week 5-6) */}
-      {isGenerating && (
-        <Card className="mb-8 border-blue-500 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-blue-900">Generating Test Cases</CardTitle>
-            <CardDescription className="text-blue-700">{currentStep}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Progress Bar */}
-            <div className="w-full bg-blue-200 rounded-full h-4 mb-4">
-              <div
-                className="bg-blue-600 h-4 rounded-full transition-all duration-300 ease-out flex items-center justify-end pr-2"
-                style={{ width: `${progress}%` }}
-              >
-                {progress > 10 && (
-                  <span className="text-xs text-white font-semibold">
-                    {Math.round(progress)}%
-                  </span>
-                )}
-              </div>
-            </div>
+      {/* Progress Display (Week 6 - New Component) */}
+      <div ref={progressSectionRef}>
+        <ProgressDisplay
+          isGenerating={isGenerating}
+          progress={progress}
+          currentStep={currentStep}
+          useKnowledgeBase={useKnowledgeBase}
+          kbDocuments={kbDocuments}
+          kbMessages={kbMessages}
+          estimatedTimeRemaining={estimatedTimeRemaining || undefined}
+          onCancel={handleCancelGeneration}
+          isCancelling={isCancelling}
+        />
+      </div>
 
-            {/* Step Indicators */}
-            <div className="flex justify-between items-center text-sm">
-              <div className={`flex items-center gap-2 ${progress >= 33 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-                {progress >= 33 ? <CheckCircle className="h-4 w-4" /> : <div className="h-4 w-4 border-2 rounded-full" />}
-                <span>Planner</span>
-              </div>
-              <div className={`flex items-center gap-2 ${progress >= 66 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-                {progress >= 66 ? <CheckCircle className="h-4 w-4" /> : <div className="h-4 w-4 border-2 rounded-full" />}
-                <span>Generator</span>
-              </div>
-              <div className={`flex items-center gap-2 ${progress >= 100 ? 'text-green-600 font-semibold' : 'text-gray-400'}`}>
-                {progress >= 100 ? <CheckCircle className="h-4 w-4" /> : <div className="h-4 w-4 border-2 rounded-full" />}
-                <span>Executor</span>
-              </div>
-            </div>
-
-            {/* KB Usage Indicator */}
-            {useKnowledgeBase && kbDocuments.length > 0 && (
-              <div className="mt-4 p-3 bg-blue-100 border border-blue-300 rounded-lg text-sm text-blue-800">
-                📚 Using {kbDocuments.length} KB document(s): {kbDocuments.map(d => d.name).join(', ')}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Completion Message */}
+      {/* Completion Message with KB Compliance (Week 6 Enhancement) */}
       {generationComplete && (
-        <div className="mb-4 p-4 border border-green-500 bg-green-50 rounded-lg text-green-700 flex items-center gap-3">
-          <CheckCircle className="h-5 w-5" />
-          <div>
-            <div className="font-semibold">✓ Generated test cases successfully!</div>
-            {useKnowledgeBase && kbDocuments.length > 0 && (
-              <div className="text-sm mt-1">KB Compliance: 92% (Target: ≥80%)</div>
-            )}
+        <div className="mb-4 p-5 border-2 border-green-500 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-md">
+          <div className="flex items-start gap-4">
+            <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <div className="text-lg font-bold text-green-800 mb-2">
+                ✓ Generated {generatedTestCasesCount} test case{generatedTestCasesCount !== 1 ? 's' : ''} successfully!
+              </div>
+              {useKnowledgeBase && kbComplianceScore !== null && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-green-700">KB Compliance Score:</span>
+                    <Badge 
+                      variant={kbComplianceScore >= 80 ? 'default' : 'destructive'}
+                      className="text-sm px-3 py-1"
+                    >
+                      {kbComplianceScore}%
+                    </Badge>
+                    <span className="text-sm text-green-600">
+                      (Target: ≥80%)
+                    </span>
+                  </div>
+                  {kbComplianceScore >= 80 && (
+                    <p className="text-sm text-green-600">
+                      🎯 Excellent! Test cases meet KB compliance standards.
+                    </p>
+                  )}
+                  {kbComplianceScore < 80 && kbComplianceScore >= 60 && (
+                    <p className="text-sm text-orange-600">
+                      ⚠️ Moderate compliance. Consider reviewing KB documents for better coverage.
+                    </p>
+                  )}
+                  {kbComplianceScore < 60 && (
+                    <p className="text-sm text-red-600">
+                      ❌ Low compliance. KB documents may not match requirements.
+                    </p>
+                  )}
+                </div>
+              )}
+              {!useKnowledgeBase && (
+                <p className="text-sm text-green-600">
+                  💡 Enable Knowledge Base for 40-60% quality improvement!
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}

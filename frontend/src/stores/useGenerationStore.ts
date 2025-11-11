@@ -43,6 +43,21 @@ interface GenerationState {
   /** Upload error message */
   uploadError: string | null;
   
+  /** KB-specific progress messages */
+  kbMessages: string[];
+  
+  /** Estimated time remaining (seconds) */
+  estimatedTimeRemaining: number | null;
+  
+  /** Whether cancellation is in progress */
+  isCancelling: boolean;
+  
+  /** Number of test cases generated */
+  generatedTestCasesCount: number;
+  
+  /** KB compliance score (0-100) */
+  kbComplianceScore: number | null;
+  
   /** Add a file to the upload queue */
   addFile: (file: File) => void;
   
@@ -73,6 +88,24 @@ interface GenerationState {
   /** Update current step */
   setCurrentStep: (step: string) => void;
   
+  /** Add KB message */
+  addKBMessage: (message: string) => void;
+  
+  /** Clear KB messages */
+  clearKBMessages: () => void;
+  
+  /** Set estimated time remaining */
+  setEstimatedTimeRemaining: (seconds: number | null) => void;
+  
+  /** Set cancelling status */
+  setIsCancelling: (isCancelling: boolean) => void;
+  
+  /** Set generated test cases count */
+  setGeneratedTestCasesCount: (count: number) => void;
+  
+  /** Set KB compliance score */
+  setKBComplianceScore: (score: number | null) => void;
+  
   /** Reset all state to initial values */
   reset: () => void;
 }
@@ -101,6 +134,11 @@ export const useGenerationStore = create<GenerationState>((set) => ({
   currentStep: '',
   uploadStatus: 'idle',
   uploadError: null,
+  kbMessages: [],
+  estimatedTimeRemaining: null,
+  isCancelling: false,
+  generatedTestCasesCount: 0,
+  kbComplianceScore: null,
   addFile: (file) => set((state) => ({ files: [...state.files, file] })),
   addFiles: (newFiles) => set((state) => ({ files: [...state.files, ...newFiles] })),
   removeFile: (fileName) =>
@@ -114,6 +152,12 @@ export const useGenerationStore = create<GenerationState>((set) => ({
   setIsGenerating: (isGenerating) => set({ isGenerating }),
   setProgress: (progress) => set({ progress }),
   setCurrentStep: (step) => set({ currentStep: step }),
+  addKBMessage: (message) => set((state) => ({ kbMessages: [...state.kbMessages, message] })),
+  clearKBMessages: () => set({ kbMessages: [] }),
+  setEstimatedTimeRemaining: (seconds) => set({ estimatedTimeRemaining: seconds }),
+  setIsCancelling: (isCancelling) => set({ isCancelling }),
+  setGeneratedTestCasesCount: (count) => set({ generatedTestCasesCount: count }),
+  setKBComplianceScore: (score) => set({ kbComplianceScore: score }),
   reset: () =>
     set({
       files: [],
@@ -123,5 +167,10 @@ export const useGenerationStore = create<GenerationState>((set) => ({
       currentStep: '',
       uploadStatus: 'idle',
       uploadError: null,
+      kbMessages: [],
+      estimatedTimeRemaining: null,
+      isCancelling: false,
+      generatedTestCasesCount: 0,
+      kbComplianceScore: null,
     }),
 }));
