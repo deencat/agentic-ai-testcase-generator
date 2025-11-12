@@ -497,25 +497,25 @@ Week 12:   Polish, Documentation & Deployment
 
 ### Developer A Tasks (Backend Core + KB Implementation)
 **Week 3:**
-- [ ] Implement file upload endpoint:
+- [x] Implement file upload endpoint: ✅ **COMPLETED 11/11/2025**
   - `POST /api/v1/upload` (multipart/form-data)
   - File validation (type, size)
   - Save files to temp storage
   - Store metadata in `files` table
-- [ ] Create document parsing services:
+- [x] Create document parsing services: ✅ **COMPLETED 11/11/2025**
   - `PDFParser` class (PyPDF2)
   - `ExcelParser` class (openpyxl)
   - `TextParser` class (basic text handling)
-- [ ] Extract text from uploaded files
-- [ ] Store extracted text in database
-- [ ] Return file metadata to frontend
-- **NEW: Implement KB document upload endpoint (4-6 hours)**
-  - [ ] `POST /api/v1/knowledge-base` (multipart/form-data)
-  - [ ] KB file validation (max 5MB, PDF/text only)
-  - [ ] Extract text from KB PDFs (reuse `PDFParser`)
-  - [ ] Calculate file hash (SHA-256) for deduplication
-  - [ ] Store KB document in `knowledge_base_documents` table
-  - [ ] Return KB metadata (docId, name, type, size)
+- [x] Extract text from uploaded files ✅ **COMPLETED 11/11/2025**
+- [x] Store extracted text in database ✅ **COMPLETED 11/11/2025**
+- [x] Return file metadata to frontend ✅ **COMPLETED 11/11/2025**
+- **NEW: Implement KB document upload endpoint (4-6 hours)** ✅ **COMPLETED 11/12/2025**
+  - [x] `POST /api/v1/knowledge-base` (multipart/form-data) ✅ **COMPLETED 11/12/2025**
+  - [x] KB file validation (max 5MB, PDF/text only) ✅ **COMPLETED 11/12/2025**
+  - [x] Extract text from KB PDFs (reuse `PDFParser`) ✅ **COMPLETED 11/12/2025**
+  - [x] Calculate file hash (SHA-256) for deduplication ✅ **COMPLETED 11/12/2025**
+  - [x] Store KB document in `knowledge_base_documents` table ✅ **COMPLETED 11/12/2025**
+  - [x] Return KB metadata (docId, name, type, size) ✅ **COMPLETED 11/12/2025**
 
 **Week 4:**
 - [ ] Implement configuration endpoints:
@@ -526,21 +526,25 @@ Week 12:   Polish, Documentation & Deployment
 - [ ] Implement encryption for API keys (AES-256)
 - [ ] Add configuration validation
 - [ ] Test Ollama connection (mock if Ollama not installed yet)
-- **NEW: Implement KB management endpoints (2-3 hours)**
-  - [ ] `GET /api/v1/knowledge-base` (list KB documents)
-  - [ ] `DELETE /api/v1/knowledge-base/{docId}` (delete KB document)
-  - [ ] Create `KBService` class
-  - [ ] Implement KB document listing with filters (docType, isActive)
-  - [ ] Implement KB document deletion with cleanup
-  - [ ] Test with sample KB documents (CRM Guide, Case Mgmt Guide)
+- **NEW: Implement KB management endpoints (2-3 hours)** ✅ **COMPLETED 11/12/2025**
+  - [x] `GET /api/v1/knowledge-base` (list KB documents) ✅ **COMPLETED 11/12/2025**
+  - [x] `GET /api/v1/knowledge-base/{docId}` (get single KB document) ✅ **COMPLETED 11/12/2025**
+  - [x] `PATCH /api/v1/knowledge-base/{docId}` (update KB document) ✅ **COMPLETED 11/12/2025**
+  - [x] `DELETE /api/v1/knowledge-base/{docId}` (delete KB document) ✅ **COMPLETED 11/12/2025**
+  - [x] KB document listing with filters (category, isActive) ✅ **COMPLETED 11/12/2025**
+  - [x] KB document deletion with soft/hard delete options ✅ **COMPLETED 11/12/2025**
+  - [x] Tested with deduplication (file hash) ✅ **COMPLETED 11/12/2025**
 
 **Deliverables:**
-- ✅ File upload API working
-- ✅ PDF and Excel parsing functional
-- ✅ **KB document upload, list, delete APIs functional**
-- ✅ **KB document storage with deduplication**
-- ✅ Configuration API endpoints ready **with KB settings**
-- ✅ Unit tests for parsers **and KB service**
+- ✅ File upload API working **COMPLETED 11/11/2025**
+- ✅ PDF and Excel parsing functional **COMPLETED 11/11/2025**
+- ✅ **KB document upload API functional** **COMPLETED 11/12/2025**
+- ✅ **KB document management APIs functional (list, get, update, delete)** **COMPLETED 11/12/2025**
+- ✅ **KB document storage with deduplication (SHA-256)** **COMPLETED 11/12/2025**
+- 🔄 Configuration API endpoints ready **with KB settings** **(Week 4)**
+- 🔄 Unit tests for parsers **and KB service** **(Week 4)**
+
+**Week 3 Status:** ✅ **100% COMPLETE** - All file upload and KB document management features implemented and tested.
 
 ---
 

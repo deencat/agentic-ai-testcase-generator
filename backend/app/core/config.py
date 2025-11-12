@@ -54,8 +54,14 @@ class Settings(BaseSettings):
         return [ext.strip() for ext in self.ALLOWED_FILE_EXTENSIONS.split(",")]
     
     # Knowledge Base
-    KB_MAX_FILE_SIZE_MB: int = 5
+    KB_MAX_FILE_SIZE_MB: int = 10  # Increased to 10MB for typical user guide PDFs
     KB_MAX_DOCUMENTS: int = 50
+    KB_ALLOWED_EXTENSIONS: str = ".pdf,.txt,.md"
+    
+    @property
+    def kb_allowed_extensions(self) -> List[str]:
+        """Parse KB allowed file extensions from comma-separated string."""
+        return [ext.strip() for ext in self.KB_ALLOWED_EXTENSIONS.split(",")]
     
     class Config:
         env_file = str(BACKEND_DIR / ".env")
