@@ -9,8 +9,10 @@
  * - KB references section
  * - All test case fields (title, description, steps, expected results)
  * - Color-coded status indicators
+ * - Inline editing for all fields
  * 
  * Week 7 Status: ✅ Complete
+ * Week 9 Status: ✅ Complete (inline editing added)
  * 
  * @component
  */
@@ -21,7 +23,11 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { TestCase } from '@/stores/useTestCaseStore';
+import { TestCase, useTestCaseStore } from '@/stores/useTestCaseStore';
+import { EditableText } from '@/components/EditableText';
+import { EditableTextarea } from '@/components/EditableTextarea';
+import { EditableList } from '@/components/EditableList';
+import { updateTestCase as apiUpdateTestCase } from '@/lib/api';
 
 /**
  * Props for TestCaseCard component
@@ -55,6 +61,7 @@ export function TestCaseCard({
   defaultExpanded = false 
 }: TestCaseCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const { updateTestCase } = useTestCaseStore();
 
   /**
    * Toggle expansion state
@@ -69,6 +76,23 @@ export function TestCaseCard({
   const handleCardClick = () => {
     if (onClick) {
       onClick(testCase);
+    }
+  };
+
+  /**
+   * Update test case field with optimistic update
+   */
+  const handleUpdate = async (field: string, value: any) => {
+    // Optimistic update
+    updateTestCase(testCase.id, { [field]: value });
+    
+    // Sync with backend
+    try {
+      await apiUpdateTestCase(testCase.id, { [field]: value });
+    } catch (error) {
+      console.error('Failed to update test case:', error);
+      // Optionally revert on error
+      throw error;
     }
   };
 
@@ -118,9 +142,19 @@ export function TestCaseCard({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <CardTitle className="text-lg font-semibold">
-                {testCase.id}. {testCase.title}
-              </CardTitle>
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <span className="text-lg font-semibold text-gray-600">{testCase.id}.</span>
+                <EditableText
+                  value={testCase.title}
+                  onSave={async (newValue) => {
+                    await handleUpdate('title', newValue);
+                  }}
+                  placeholder="Enter test case title"
+                  required
+                  maxLength={200}
+                  className="text-lg font-semibold"
+                />
+              </div>
               
               {/* KB Badge */}
               {getKBBadge()}
@@ -165,33 +199,41 @@ export function TestCaseCard({
           {/* Description */}
           <div>
             <h4 className="font-semibold text-sm text-gray-700 mb-2">Description</h4>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">
-              {testCase.description}
-            </p>
+            <EditableTextarea
+              value={testCase.description}
+              onSave={async (newValue) => {
+                await handleUpdate('description', newValue);
+              }}
+              placeholder="Enter test case description"
+              required
+              minRows={2}
+            />
           </div>
           
           {/* Test Steps */}
           <div>
-            <h4 className="font-semibold text-sm text-gray-700 mb-2">Test Steps</h4>
-            <ol className="list-decimal list-inside space-y-2">
-              {testCase.steps.map((step, index) => (
-                <li key={index} className="text-sm text-gray-600">
-                  {step}
-                </li>
-              ))}
-            </ol>
+            <EditableList
+              items={testCase.steps}
+              onSave={async (newItems) => {
+                await handleUpdate('steps', newItems);
+              }}
+              placeholder="Enter test step"
+              ordered
+              label="Test Steps"
+            />
           </div>
           
           {/* Expected Results */}
           <div>
-            <h4 className="font-semibold text-sm text-gray-700 mb-2">Expected Results</h4>
-            <ol className="list-decimal list-inside space-y-2">
-              {testCase.expectedResults.map((result, index) => (
-                <li key={index} className="text-sm text-gray-600">
-                  {result}
-                </li>
-              ))}
-            </ol>
+            <EditableList
+              items={testCase.expectedResults}
+              onSave={async (newItems) => {
+                await handleUpdate('expectedResults', newItems);
+              }}
+              placeholder="Enter expected result"
+              ordered
+              label="Expected Results"
+            />
           </div>
           
           {/* Cross-System Validation Table */}
