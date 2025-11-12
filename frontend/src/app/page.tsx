@@ -29,6 +29,7 @@ import { ConfigDrawer } from '@/components/ConfigDrawer';
 import { StatusIndicators } from '@/components/StatusIndicators';
 import { ProgressDisplay } from '@/components/ProgressDisplay';
 import { TestCaseList } from '@/components/TestCaseList';
+import { ExportPanel } from '@/components/ExportPanel';
 import { useGenerationStore } from '@/stores/useGenerationStore';
 import { useKBStore } from '@/stores/useKBStore';
 import { api } from '@/lib/api';
@@ -541,6 +542,11 @@ export default function Home() {
       {/* Test Cases Section (Week 7) */}
       <div className="mt-8">
         <TestCaseList />
+      </div>
+
+      {/* Export Section (Week 10) */}
+      <div className="mt-8">
+        <ExportPanel />
       </div>
 
       {/* Projects Section */}
